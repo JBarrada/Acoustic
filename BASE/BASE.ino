@@ -16,7 +16,14 @@ void setup() {
   
   mySerial.begin(9600);
 
-  echo();
+  for (int i = 2; i < 20; i+=2) {
+    digitalWrite(2, HIGH);
+    delayMicroseconds(i*1000);
+    digitalWrite(2, LOW);
+
+    delay(100);
+    //delayMicroseconds(CHIRP_GAP - CHIRP_LEN);
+  }
 }
 
 void echo() {
