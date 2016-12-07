@@ -5,6 +5,8 @@ from ctypes import sizeof, memmove, addressof, create_string_buffer
 import colorsys
 import numpy
 import math
+import analyze
+
 
 class Texture:
     def __init__(self):
@@ -121,6 +123,12 @@ class WaveformDisplay:
         return bitmap
 
 
+class Marker:
+    def __init__(self, pos, color):
+        self.pos = pos
+        self.color = color
+
+
 class Display:
     W_WIDTH = 600
     W_HEIGHT = 100
@@ -138,11 +146,13 @@ class Display:
         self.sample_rate = sample_rate
         self.marker_pos_a = 0
         self.marker_pos_b = 0
+        self.markers = []
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
         glColor3f(1.0, 1.0, 1.0)
         glLineWidth(2.0)
+        glPointSize(5.0)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluOrtho2D(0.0, self.W_WIDTH, 0.0, self.W_HEIGHT)
@@ -189,6 +199,10 @@ class Display:
         print("B: %d (%0.3fmS)" % (self.marker_pos_b, marker_b_ms))
         print("DELTA: %d (%0.3fmS)" % (delta_samples, delta_ms))
 
+        if delta_samples < 50000:
+            self.markers = analyze.analyze(self.wave_display.data, min(self.marker_pos_a, self.marker_pos_b),
+                                 max(self.marker_pos_a, self.marker_pos_b))
+
     def mouse(self, button, state, x, y):
         if button == GLUT_LEFT_BUTTON:
             if state == GLUT_DOWN:
@@ -220,10 +234,20 @@ class Display:
         self.offset -= ((x-self.offset)*i_scale)-(x-self.offset)
         self.offset = 0 if self.offset > 0 else self.offset
 
+    def draw_marker(self, marker):
+        markerx = self.offset+(float(marker.pos)/len(self.wave_display.data))*(self.W_WIDTH*self.scale)
+        glColor3f(marker.color[0], marker.color[1], marker.color[2])
+        glVertex2f(markerx, (marker.height / 32768.0) * (self.W_HEIGHT / 2.0) + (self.W_HEIGHT / 2.0))
+
     def display(self):
         glClear(GL_COLOR_BUFFER_BIT)
 
         self.wave_display.draw(self.offset, self.scale, self.W_WIDTH, self.W_HEIGHT, 1, 1, 1)
+
+        glBegin(GL_POINTS)
+        for marker in self.markers:
+            self.draw_marker(marker)
+        glEnd()
 
         glColor3f(1.0, 0.0, 0.0)
         glBegin(GL_LINES)
