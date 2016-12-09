@@ -200,7 +200,7 @@ class Display:
         print("DELTA: %d (%0.3fmS)" % (delta_samples, delta_ms))
 
         if delta_samples < 50000:
-            self.markers = analyze.analyze(self.wave_display.data, min(self.marker_pos_a, self.marker_pos_b),
+            start, self.markers = analyze.analyze(self.wave_display.data, min(self.marker_pos_a, self.marker_pos_b),
                                  max(self.marker_pos_a, self.marker_pos_b))
 
     def mouse(self, button, state, x, y):
